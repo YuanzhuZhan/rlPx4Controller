@@ -7,6 +7,7 @@
 #include "parallelVelController.hpp"
 #include "parallelAttiController.hpp"
 #include "parallelPosController.hpp"
+#include "parallelHexaPosController.hpp"
 namespace py = pybind11;
 
 #define STRINGIFY(x) #x
@@ -18,6 +19,26 @@ PYBIND11_MODULE(pyParallelControl, m)
         Quadrotor Parallel Controller Utils
         -----------------------
     )pbdoc";
+
+    py::class_<HexaMixer>(m, "HexaMixer")
+        .def(py::init<>())
+        .def("configure", &HexaMixer::configure,
+             py::arg("positions_b"), py::arg("axes_b"), py::arg("reaction_signed_m"),
+             py::arg("max_thrust_n"), py::arg("motor_tau") = 0.0)
+        .def("update", &HexaMixer::update, py::arg("normalized_wrench"), py::arg("dt"))
+        .def("reset", &HexaMixer::reset)
+        .def_property_readonly("wrench_scale", &HexaMixer::wrenchScale)
+        .def_property_readonly("allocation_matrix", &HexaMixer::allocationMatrix)
+        .def_property_readonly("wrench_error", &HexaMixer::wrenchError);
+
+    py::class_<pyParallelHexaPositionControl>(m, "ParallelHexaPosControl")
+        .def(py::init<int>(), py::arg("envs_num"))
+        .def("configure", &pyParallelHexaPositionControl::configure,
+             py::arg("positions_b"), py::arg("axes_b"), py::arg("reaction_signed_m"),
+             py::arg("max_thrust_n"), py::arg("masses"), py::arg("motor_tau") = 0.0)
+        .def("set_status", &pyParallelHexaPositionControl::set_status,
+             py::arg("pos"), py::arg("q_matrix"), py::arg("vel"), py::arg("ang_vel"), py::arg("dt"))
+        .def("update", &pyParallelHexaPositionControl::update, py::arg("actions"));
 
     py::class_<pyParallelRateControl>(m, "ParallelRateControl")
         .def(py::init<int>(), "batch calc")
