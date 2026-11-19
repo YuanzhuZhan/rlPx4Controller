@@ -95,8 +95,8 @@ public:
 
 Px4AttitudeController::Px4AttitudeController(/* args */)
 {
-	_rate_limit << 1600/57.3,1600/57.3,1000/57.3;
-	set_pid_params(Eigen::Vector3d(8.0, 8.0, 1.0));
+	_rate_limit << 3.8397,3.8397,3.4907;
+	set_pid_params(Eigen::Vector3d(6.5, 6.5, 2.8));
 	_yaw_w = 0.400;
 	// compensate for the effect of the yaw weight rescaling the output
 	if (_yaw_w > 1e-4f) {

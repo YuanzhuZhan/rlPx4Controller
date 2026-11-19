@@ -67,5 +67,4 @@ Rebuild from this directory:
 
 ```bash
 ../am_force/.venv/bin/python setup.py build_ext --inplace --force
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 ../am_force/.venv/bin/python -m 
 ```

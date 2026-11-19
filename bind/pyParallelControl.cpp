@@ -38,6 +38,7 @@ PYBIND11_MODULE(pyParallelControl, m)
              py::arg("max_thrust_n"), py::arg("masses"), py::arg("motor_tau") = 0.0)
         .def("set_status", &pyParallelHexaPositionControl::set_status,
              py::arg("pos"), py::arg("q_matrix"), py::arg("vel"), py::arg("ang_vel"), py::arg("dt"))
+        .def("reset", &pyParallelHexaPositionControl::reset, py::arg("env_ids"))
         .def("update", &pyParallelHexaPositionControl::update, py::arg("actions"));
 
     py::class_<pyParallelRateControl>(m, "ParallelRateControl")

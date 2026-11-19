@@ -34,6 +34,7 @@ public:
                    const Eigen::VectorXd& masses, double motor_tau = 0.0);
     void set_status(Eigen::MatrixXd pos_matrix, Eigen::MatrixXd q_matrix, Eigen::MatrixXd vel_matrix, Eigen::MatrixXd ang_vel_matrix, double dt);
     Eigen::MatrixXd update(const Eigen::MatrixXd &actions);
+    void reset(const Eigen::VectorXi& env_ids);
     ~pyParallelHexaPositionControl()
     {
 
@@ -74,7 +75,9 @@ inline void pyParallelHexaPositionControl::configure(
     {
         _mixers.at(i) = mixer;
         _pos_control.at(i).set_mass(masses(i));
+        _pos_control.at(i).reset_integral();
         _pos_control.at(i).set_force_scale(mixer.wrenchScale().head<3>());
+        _rate_control.at(i).reset_integral();
     }
 }
 
@@ -96,6 +99,35 @@ inline void pyParallelHexaPositionControl::set_status(Eigen::MatrixXd pos_matrix
         _drons_stats.at(i).dt = dt;
 
         _rate_control.at(i).set_q_world(q_matrix.row(i).transpose());
+    }
+}
+
+inline void pyParallelHexaPositionControl::reset(
+    const Eigen::VectorXi& env_ids)
+{
+    for (Eigen::Index k = 0; k < env_ids.size(); ++k)
+    {
+        const int i = env_ids(k);
+
+        if (i < 0 || i >= _envs_num)
+            throw std::out_of_range("invalid environment id");
+
+        // Clear position PID integrator
+        _pos_control.at(i).reset_integral();
+        // Clear rate PID integrator
+        _rate_control.at(i).reset_integral();
+
+        // Clear rotor motor-lag state
+        _mixers.at(i).reset();
+
+        // Reset previous drone state
+        _drons_stats.at(i) = DroneStatus_t();
+        _drons_stats.at(i).quaternion =
+            Eigen::Vector4d(1, 0, 0, 0);
+        _drons_stats.at(i).dt = 0.01;
+
+        // Clear cached motor commands
+        _commands.row(i).setZero();
     }
 }
 

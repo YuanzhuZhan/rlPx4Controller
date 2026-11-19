@@ -73,7 +73,9 @@ public:
 	void updateIntegral(Eigen::Vector3d &rate_error, const float dt);
 	void set_pid_params(Eigen::Vector3d gain_p, Eigen::Vector3d gain_i, Eigen::Vector3d gain_d);
 
-	
+	void reset_integral(){
+		_rate_int.setZero();
+	}
 	Eigen::Vector3d get_rate_target();
 	Eigen::Vector3d get_rate_now();
 	Eigen::Vector3d transform_world2body(Eigen::Quaterniond q, Eigen::Vector3d rate_world);
@@ -82,9 +84,9 @@ public:
 
 Px4RateController::Px4RateController()
 {
-	set_pid_params(Eigen::Vector3d(0.5,0.5,0.2),
-				   Eigen::Vector3d(0.08,0.08,0.05),
-				   Eigen::Vector3d(0.001,0.001,0.0));
+	set_pid_params(Eigen::Vector3d(0.3,0.3,0.24),
+				   Eigen::Vector3d(0.2,0.2,0.2),
+				   Eigen::Vector3d(0.003,0.003,0.0));
 }
 void Px4RateController::set_pid_params(Eigen::Vector3d gain_p, Eigen::Vector3d gain_i, Eigen::Vector3d gain_d)
 {

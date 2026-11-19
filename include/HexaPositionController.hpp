@@ -41,9 +41,21 @@ public:
         force_scale_ = force_scale;
     }
 
-    Vec3 update(const Vec3& target_pos, const DroneStatus_t& state) const {
-        Vec3 acceleration = kp_.cwiseProduct(target_pos - state.position)
-                          - kv_.cwiseProduct(state.velocity);
+    void reset_integral() {
+        pos_integral_.setZero();
+    }
+    Vec3 update(const Vec3& target_pos, const DroneStatus_t& state) {
+        // Each environment keeps its own integral state.
+        const Vec3 e_p = target_pos - state.position;
+        const Vec3 integral_limit(0.5, 0.5, 5.0);
+        pos_integral_ += e_p * state.dt;
+        pos_integral_ = pos_integral_.cwiseMax(-integral_limit)
+                                    .cwiseMin(integral_limit);
+
+
+        Vec3 acceleration = kp_.cwiseProduct(e_p)
+                        - kv_.cwiseProduct(state.velocity)
+                        + ki_.cwiseProduct(pos_integral_);
         acceleration = acceleration.cwiseMax(Vec3::Constant(-4.0))
                                    .cwiseMin(Vec3::Constant(4.0));
         const Vec3 force_w = mass_ * (acceleration + Vec3(0.0, 0.0, gravity_));
@@ -55,10 +67,13 @@ public:
         return command;
     }
 
-private:  // TODO: doublechekc the kp_ and kv_gains
-    Vec3 kp_ = Vec3(0.7, 0.7, 0.7);
-    Vec3 kv_ = Vec3(0.7, 0.7, 0.7);
-    Vec3 force_scale_ = Vec3::Constant(6.0 * 23.0); // overridden by mixer geometry
+private:
+    // Horizontal response fitted to P2.bag at 0.35/0.70 rad/s; altitude was not excited.
+    Vec3 kp_ = Vec3(2.2943, 4.9691, 3.3727);
+    Vec3 kv_ = Vec3(2.4175, 4.0609, 3.4577);
+    Vec3 ki_ = Vec3(0.0758, 0.1113, 0.4533);
+    Vec3 pos_integral_ = Vec3::Zero();
+    Vec3 force_scale_ = Vec3::Constant(6.0 * 21.7); // overridden by mixer geometry
     double mass_ = 8.358; // overwritten via configure() for actual robot
     double gravity_ = 9.81;
 };
